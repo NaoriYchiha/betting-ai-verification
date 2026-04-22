@@ -3,7 +3,7 @@ package org.lytvynovych.bettingaiverification.controller;
 import org.lytvynovych.bettingaiverification.entity.Match;
 import org.lytvynovych.bettingaiverification.entity.Prediction;
 import org.lytvynovych.bettingaiverification.service.AiPredictionService;
-import org.lytvynovych.bettingaiverification.service.AiResponse;
+import org.lytvynovych.bettingaiverification.dto.ai.AiResponse;
 import org.lytvynovych.bettingaiverification.service.MatchService;
 import org.lytvynovych.bettingaiverification.service.PredictionService;
 import org.springframework.web.bind.annotation.*;
@@ -25,16 +25,13 @@ public class PredictionController {
         this.predictionService = predictionService;
     }
 
-    // 🚀 главный endpoint — запуск AI анализа
     @PostMapping("/{matchId}")
     public Prediction generatePrediction(@PathVariable Long matchId) {
 
         Match match = matchService.getById(matchId);
 
-        // 1. получаем ответ от ChatGPT
         AiResponse response = aiPredictionService.generatePrediction(match);
 
-        // 2. сохраняем в БД
         return predictionService.savePrediction(
                 match,
                 response.getHomeWin(),
@@ -44,7 +41,6 @@ public class PredictionController {
         );
     }
 
-    // 📌 получить прогноз по матчу
     @GetMapping("/match/{matchId}")
     public Prediction getPrediction(@PathVariable Long matchId) {
         return predictionService.getByMatchId(matchId);

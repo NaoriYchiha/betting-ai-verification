@@ -2,6 +2,7 @@ package org.lytvynovych.bettingaiverification.client;
 
 import org.lytvynovych.bettingaiverification.dto.external.MatchItemDto;
 import org.lytvynovych.bettingaiverification.dto.external.MatchesResponseDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,7 +14,8 @@ public class FootballApiClient {
 
     private final WebClient webClient;
 
-    private final String API_KEY = "cb44fbef134d4afab75c0351cc5681b8";
+    @Value("${football.api-key}")
+    private String API_KEY;
 
     public FootballApiClient() {
         this.webClient = WebClient.builder()

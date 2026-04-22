@@ -17,9 +17,9 @@ public class Prediction {
     @ManyToOne
     private Match match;
 
-    private int homeWinProb;
-    private int drawProb;
-    private int awayWinProb;
+    private double homeWinProb;
+    private double drawProb;
+    private double awayWinProb;
 
     @Column(length = 2000)
     private String aiExplanation;

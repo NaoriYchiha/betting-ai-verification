@@ -17,9 +17,9 @@ public class PredictionService {
     }
 
     public Prediction savePrediction(Match match,
-                                     int homeWin,
-                                     int draw,
-                                     int awayWin,
+                                     double homeWin,
+                                     double draw,
+                                     double awayWin,
                                      String explanation) {
 
         Prediction prediction = new Prediction();

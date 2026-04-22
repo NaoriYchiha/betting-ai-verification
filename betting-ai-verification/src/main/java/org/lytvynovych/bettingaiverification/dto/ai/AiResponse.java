@@ -1,4 +1,4 @@
-package org.lytvynovych.bettingaiverification.service;
+package org.lytvynovych.bettingaiverification.dto.ai;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,9 +7,9 @@ import lombok.Setter;
 @Setter
 public class AiResponse {
 
-    private int homeWin;
-    private int draw;
-    private int awayWin;
+    private double homeWin;
+    private double draw;
+    private double awayWin;
     private String explanation;
 
     // getters/setters
