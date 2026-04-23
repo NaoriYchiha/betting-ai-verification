@@ -1,1261 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BetGuard AI — Dashboard</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg: #080c10;
-  --surface: #0d1117;
-  --surface2: #131920;
-  --border: #1e2a35;
-  --border2: #243040;
-  --text: #e2eaf2;
-  --muted: #5a7085;
-  --accent: #00d4ff;
-  --accent2: #0099cc;
-  --low: #00e676;
-  --med: #ffb300;
-  --high: #ff3d3d;
-  --low-bg: rgba(0,230,118,0.08);
-  --med-bg: rgba(255,179,0,0.08);
-  --high-bg: rgba(255,61,61,0.08);
-  --mono: 'Space Mono', monospace;
-  --sans: 'DM Sans', sans-serif;
-}
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  min-height: 100vh;
-  display: flex;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 220px;
-  min-height: 100vh;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0;
-  z-index: 100;
-}
-
-.logo {
-  padding: 28px 20px 24px;
-  border-bottom: 1px solid var(--border);
-}
-
-.logo-text {
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--accent);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.logo-sub {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 3px;
-  font-family: var(--mono);
-  letter-spacing: 1px;
-}
-
-.nav {
-  padding: 16px 0;
-  flex: 1;
-}
-
-.nav-section {
-  padding: 8px 20px 4px;
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-family: var(--mono);
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-  border-left: 2px solid transparent;
-  cursor: pointer;
-}
-
-.nav-item:hover {
-  color: var(--text);
-  background: rgba(255,255,255,0.03);
-}
-
-.nav-item.active {
-  color: var(--accent);
-  border-left-color: var(--accent);
-  background: rgba(0,212,255,0.05);
-}
-
-.nav-icon {
-  width: 16px;
-  text-align: center;
-  font-size: 14px;
-}
-
-.sidebar-footer {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--muted);
-  font-family: var(--mono);
-}
-
-.status-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--low);
-  margin-right: 6px;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* MAIN */
-.main {
-  margin-left: 220px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  padding: 20px 32px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface);
-}
-
-.page-title {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--muted);
-  letter-spacing: 1px;
-}
-
-.page-title span {
-  color: var(--text);
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.time-badge {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  background: var(--surface2);
-  padding: 4px 10px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-
-.content {
-  padding: 28px 32px;
-  flex: 1;
-}
-
-/* STAT CARDS */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.stat-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.2s;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--accent);
-  opacity: 0.4;
-}
-
-.stat-card.danger::before { background: var(--high); opacity: 0.6; }
-.stat-card.warning::before { background: var(--med); opacity: 0.6; }
-.stat-card.safe::before { background: var(--low); opacity: 0.6; }
-
-.stat-card:hover { border-color: var(--border2); }
-
-.stat-label {
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-family: var(--mono);
-  margin-bottom: 12px;
-}
-
-.stat-value {
-  font-family: var(--mono);
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-
-.stat-change {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 8px;
-  font-family: var(--mono);
-}
-
-.stat-change.up { color: var(--low); }
-.stat-change.down { color: var(--high); }
-
-/* RISK OVERVIEW */
-.grid-2 {
-  display: grid;
-  grid-template-columns: 1fr 1.6fr;
-  gap: 16px;
-  margin-bottom: 28px;
-}
-
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 24px;
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.card-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.card-badge {
-  font-size: 10px;
-  font-family: var(--mono);
-  padding: 3px 8px;
-  border-radius: 3px;
-  background: rgba(0,212,255,0.1);
-  color: var(--accent);
-  border: 1px solid rgba(0,212,255,0.2);
-}
-
-.risk-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.risk-bar-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.risk-bar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.risk-bar-label {
-  font-size: 12px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.risk-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-}
-
-.risk-bar-pct {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.risk-track {
-  height: 6px;
-  background: var(--surface2);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.risk-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 1s ease;
-}
-
-/* TABLE */
-.table-wrap {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead th {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-align: left;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-
-tbody tr:hover { background: rgba(255,255,255,0.02); }
-
-tbody td {
-  padding: 12px 12px;
-  font-size: 13px;
-  color: var(--text);
-}
-
-.id-cell {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.risk-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
-.risk-badge.low { background: var(--low-bg); color: var(--low); border: 1px solid rgba(0,230,118,0.2); }
-.risk-badge.med { background: var(--med-bg); color: var(--med); border: 1px solid rgba(255,179,0,0.2); }
-.risk-badge.high { background: var(--high-bg); color: var(--high); border: 1px solid rgba(255,61,61,0.2); }
-
-.verdict-cell {
-  font-size: 12px;
-  color: var(--muted);
-  font-style: italic;
-}
-
-.verdict-cell.flagged { color: var(--high); font-style: normal; font-weight: 500; }
-
-/* PAGE SECTIONS */
-.page { display: none; }
-.page.active { display: block; }
-
-/* USERS PAGE */
-.user-row td:first-child { font-family: var(--mono); font-size: 12px; }
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.status-badge.active { background: var(--low-bg); color: var(--low); }
-.status-badge.blocked { background: var(--high-bg); color: var(--high); }
-.status-badge.flagged { background: var(--med-bg); color: var(--med); }
-
-.action-btn {
-  padding: 5px 12px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-family: var(--mono);
-  cursor: pointer;
-  border: 1px solid var(--border2);
-  background: var(--surface2);
-  color: var(--muted);
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background: var(--accent);
-  color: var(--bg);
-  border-color: var(--accent);
-}
-
-/* VERIFICATION PAGE */
-.verify-panel {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 20px;
-}
-
-.verify-form {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 24px;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-label {
-  display: block;
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-family: var(--mono);
-  margin-bottom: 8px;
-}
-
-.form-select, .form-input {
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s;
-  appearance: none;
-}
-
-.form-select:focus, .form-input:focus {
-  border-color: var(--accent);
-}
-
-.run-btn {
-  width: 100%;
-  padding: 14px;
-  background: var(--accent);
-  color: var(--bg);
-  border: none;
-  border-radius: 6px;
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 2px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 8px;
-}
-
-.run-btn:hover { background: var(--accent2); transform: translateY(-1px); }
-.run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-.ai-result {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 24px;
-  display: none;
-}
-
-.ai-result.visible { display: block; }
-
-.ai-result.high-risk {
-  border-color: rgba(255,61,61,0.4);
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(255,61,61,0.04) 100%);
-}
-.ai-result.med-risk {
-  border-color: rgba(255,179,0,0.4);
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(255,179,0,0.04) 100%);
-}
-.ai-result.low-risk {
-  border-color: rgba(0,230,118,0.4);
-  background: linear-gradient(135deg, var(--surface) 0%, rgba(0,230,118,0.04) 100%);
-}
-
-.ai-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.ai-icon {
-  font-size: 20px;
-}
-
-.ai-title {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 2px;
-}
-
-.risk-level-display {
-  font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.risk-level-display.high { color: var(--high); }
-.risk-level-display.med { color: var(--med); }
-.risk-level-display.low { color: var(--low); }
-
-.ai-flags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 16px 0;
-}
-
-.flag-chip {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-family: var(--mono);
-}
-
-.flag-chip.active { background: var(--high-bg); color: var(--high); border: 1px solid rgba(255,61,61,0.3); }
-.flag-chip.inactive { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
-
-.ai-explanation {
-  margin-top: 16px;
-  padding: 16px;
-  background: var(--surface2);
-  border-radius: 6px;
-  border-left: 3px solid var(--accent);
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.7;
-}
-
-.ai-explanation strong {
-  display: block;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--accent);
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-}
-
-/* LOADING */
-.loading-state {
-  display: none;
-  text-align: center;
-  padding: 60px 24px;
-}
-
-.loading-state.visible { display: block; }
-
-.spinner {
-  width: 36px; height: 36px;
-  border: 2px solid var(--border2);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.loading-text {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  letter-spacing: 2px;
-}
-
-/* MATCHES PAGE */
-.match-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  transition: border-color 0.2s;
-}
-
-.match-card:hover { border-color: var(--border2); }
-
-.match-teams {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.match-vs {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  padding: 2px 8px;
-  background: var(--surface2);
-  border-radius: 3px;
-}
-
-.match-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.match-time {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.match-status {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 3px 8px;
-  border-radius: 3px;
-}
-
-.match-status.upcoming { background: rgba(0,212,255,0.1); color: var(--accent); }
-.match-status.live { background: rgba(0,230,118,0.1); color: var(--low); }
-.match-status.finished { background: var(--surface2); color: var(--muted); }
-
-.verify-btn {
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: 5px;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 1px;
-}
-
-.verify-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(0,212,255,0.05);
-}
-
-/* FILTERS */
-.filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
-.filter-btn {
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-family: var(--mono);
-  font-size: 10px;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--muted);
-  transition: all 0.2s;
-  letter-spacing: 1px;
-}
-
-.filter-btn:hover, .filter-btn.active {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: rgba(0,212,255,0.05);
-}
-
-.filter-btn.danger.active {
-  border-color: var(--high);
-  color: var(--high);
-  background: var(--high-bg);
-}
-
-/* SECTION TITLE */
-.section-title {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
-
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--surface); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-/* EMPTY STATE */
-.empty-state {
-  text-align: center;
-  padding: 60px;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 12px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetGuard AI — Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
 <aside class="sidebar">
-  <div class="logo">
-    <div class="logo-text">BetGuard</div>
-    <div class="logo-sub">AI RISK SYSTEM v1.0</div>
-  </div>
-  <nav class="nav">
-    <div class="nav-section">Analysis</div>
-    <a class="nav-item active" onclick="showPage('dashboard', this)">
-      <span class="nav-icon">◈</span> Dashboard
-    </a>
-    <a class="nav-item" onclick="showPage('verification', this)">
-      <span class="nav-icon">⬡</span> Verification
-    </a>
-    <div class="nav-section">Data</div>
-    <a class="nav-item" onclick="showPage('users', this)">
-      <span class="nav-icon">◯</span> Users
-    </a>
-    <a class="nav-item" onclick="showPage('bets', this)">
-      <span class="nav-icon">◫</span> Bets
-    </a>
-    <a class="nav-item" onclick="showPage('matches', this)">
-      <span class="nav-icon">◉</span> Matches
-    </a>
-  </nav>
-  <div class="sidebar-footer">
-    <span class="status-dot"></span>AI ENGINE ONLINE
-  </div>
+    <div class="logo">
+        <div class="logo-text">BetGuard</div>
+        <div class="logo-sub">AI RISK SYSTEM v1.0</div>
+    </div>
+    <nav class="nav">
+        <div class="nav-section">Analysis</div>
+        <a class="nav-item active" onclick="showPage('dashboard', this)">
+            <span class="nav-icon">◈</span> Dashboard
+        </a>
+        <a class="nav-item" onclick="showPage('verification', this)">
+            <span class="nav-icon">⬡</span> Verification
+        </a>
+        <div class="nav-section">Data</div>
+        <a class="nav-item" onclick="showPage('users', this)">
+            <span class="nav-icon">◯</span> Users
+        </a>
+        <a class="nav-item" onclick="showPage('bets', this)">
+            <span class="nav-icon">◫</span> Bets
+        </a>
+        <a class="nav-item" onclick="showPage('matches', this)">
+            <span class="nav-icon">◉</span> Matches
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <span class="status-dot"></span>AI ENGINE ONLINE
+    </div>
 </aside>
 
 <div class="main">
-  <div class="topbar">
-    <div class="page-title">BetGuard / <span id="pageLabel">Dashboard</span></div>
-    <div class="topbar-right">
-      <div class="time-badge" id="clock">--:--:--</div>
+    <div class="topbar">
+        <div class="page-title">BetGuard / <span id="pageLabel">Dashboard</span></div>
+        <div class="topbar-right">
+            <div class="time-badge" id="clock">--:--:--</div>
+        </div>
     </div>
-  </div>
 
-  <div class="content">
+    <div class="content">
 
-    <!-- DASHBOARD PAGE -->
-    <div class="page active" id="page-dashboard">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Users</div>
-          <div class="stat-value" id="stat-users">—</div>
-          <div class="stat-change up" id="stat-users-change">Loading...</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Active Bets</div>
-          <div class="stat-value" id="stat-bets">—</div>
-          <div class="stat-change" id="stat-bets-change">Loading...</div>
-        </div>
-        <div class="stat-card danger">
-          <div class="stat-label">Suspicious Bets</div>
-          <div class="stat-value" id="stat-suspicious">—</div>
-          <div class="stat-change down" id="stat-susp-change">Loading...</div>
-        </div>
-        <div class="stat-card warning">
-          <div class="stat-label">Blocked Users</div>
-          <div class="stat-value" id="stat-blocked">—</div>
-          <div class="stat-change down" id="stat-blocked-change">Loading...</div>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">AI Risk Overview</div>
-            <div class="card-badge">LIVE</div>
-          </div>
-          <div class="risk-bars">
-            <div class="risk-bar-item">
-              <div class="risk-bar-header">
-                <div class="risk-bar-label">
-                  <div class="risk-dot" style="background:var(--low)"></div>
-                  LOW RISK
+        <div class="page active" id="page-dashboard">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="stat-users">—</div>
+                    <div class="stat-change up" id="stat-users-change">Loading...</div>
                 </div>
-                <div class="risk-bar-pct" id="pct-low">—%</div>
-              </div>
-              <div class="risk-track">
-                <div class="risk-fill" id="bar-low" style="width:0%;background:var(--low)"></div>
-              </div>
-            </div>
-            <div class="risk-bar-item">
-              <div class="risk-bar-header">
-                <div class="risk-bar-label">
-                  <div class="risk-dot" style="background:var(--med)"></div>
-                  MEDIUM RISK
+                <div class="stat-card">
+                    <div class="stat-label">Active Bets</div>
+                    <div class="stat-value" id="stat-bets">—</div>
+                    <div class="stat-change" id="stat-bets-change">Loading...</div>
                 </div>
-                <div class="risk-bar-pct" id="pct-med">—%</div>
-              </div>
-              <div class="risk-track">
-                <div class="risk-fill" id="bar-med" style="width:0%;background:var(--med)"></div>
-              </div>
-            </div>
-            <div class="risk-bar-item">
-              <div class="risk-bar-header">
-                <div class="risk-bar-label">
-                  <div class="risk-dot" style="background:var(--high)"></div>
-                  HIGH RISK
+                <div class="stat-card danger">
+                    <div class="stat-label">Suspicious Bets</div>
+                    <div class="stat-value" id="stat-suspicious">—</div>
+                    <div class="stat-change down" id="stat-susp-change">Loading...</div>
                 </div>
-                <div class="risk-bar-pct" id="pct-high">—%</div>
-              </div>
-              <div class="risk-track">
-                <div class="risk-fill" id="bar-high" style="width:0%;background:var(--high)"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Recent AI Decisions</div>
-            <div class="card-badge" id="decisions-count">0 RESULTS</div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>BET ID</th>
-                  <th>USER</th>
-                  <th>AMOUNT</th>
-                  <th>MATCH</th>
-                  <th>RISK</th>
-                  <th>VERDICT</th>
-                </tr>
-              </thead>
-              <tbody id="recent-table">
-                <tr><td colspan="6" class="empty-state">No data available</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- USERS PAGE -->
-    <div class="page" id="page-users">
-      <div class="section-title">User Registry</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>USERNAME</th>
-              <th>BALANCE</th>
-              <th>STATUS</th>
-              <th>RISK SCORE</th>
-              <th>ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody id="users-table">
-            <tr><td colspan="6" class="empty-state">Loading users...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- BETS PAGE -->
-    <div class="page" id="page-bets">
-      <div class="filters">
-        <button class="filter-btn active" onclick="filterBets('all', this)">ALL BETS</button>
-        <button class="filter-btn danger" onclick="filterBets('high', this)">HIGH RISK ONLY</button>
-        <button class="filter-btn" onclick="filterBets('med', this)">MEDIUM RISK</button>
-        <button class="filter-btn" onclick="filterBets('low', this)">LOW RISK</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>BET ID</th>
-              <th>USER</th>
-              <th>MATCH</th>
-              <th>AMOUNT</th>
-              <th>OUTCOME</th>
-              <th>AI RISK</th>
-            </tr>
-          </thead>
-          <tbody id="bets-table">
-            <tr><td colspan="6" class="empty-state">Loading bets...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- VERIFICATION PAGE -->
-    <div class="page" id="page-verification">
-      <div class="verify-panel">
-        <div class="verify-form">
-          <div class="card-title" style="margin-bottom:20px">RUN AI VERIFICATION</div>
-
-          <div class="form-group">
-            <label class="form-label">Select User</label>
-            <select class="form-select" id="verify-user">
-              <option value="">— Select user —</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Analysis Mode</label>
-            <select class="form-select" id="verify-mode">
-              <option value="full">Full History Analysis</option>
-              <option value="recent">Last 30 Days</option>
-              <option value="suspicious">Suspicious Only</option>
-            </select>
-          </div>
-
-          <button class="run-btn" onclick="runVerification()" id="run-btn">
-            ▶ RUN AI ANALYSIS
-          </button>
-        </div>
-
-        <div>
-          <div class="loading-state" id="loading-state">
-            <div class="spinner"></div>
-            <div class="loading-text">AI ENGINE PROCESSING...</div>
-          </div>
-
-          <div class="ai-result" id="ai-result">
-            <div class="ai-header">
-              <span class="ai-icon">🤖</span>
-              <span class="ai-title">AI VERDICT</span>
+                <div class="stat-card warning">
+                    <div class="stat-label">Blocked Users</div>
+                    <div class="stat-value" id="stat-blocked">—</div>
+                    <div class="stat-change down" id="stat-blocked-change">Loading...</div>
+                </div>
             </div>
 
-            <div class="risk-level-display" id="result-risk">—</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="result-reason">—</div>
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">AI Risk Overview (Unique Bets)</div>
+                        <div class="card-badge">LIVE</div>
+                    </div>
+                    <div class="risk-bars">
+                        <div class="risk-bar-item">
+                            <div class="risk-bar-header">
+                                <div class="risk-bar-label">
+                                    <div class="risk-dot" style="background:var(--low)"></div>
+                                    LOW RISK
+                                </div>
+                                <div class="risk-bar-pct" id="pct-low">—%</div>
+                            </div>
+                            <div class="risk-track">
+                                <div class="risk-fill" id="bar-low" style="width:0%;background:var(--low)"></div>
+                            </div>
+                        </div>
+                        <div class="risk-bar-item">
+                            <div class="risk-bar-header">
+                                <div class="risk-bar-label">
+                                    <div class="risk-dot" style="background:var(--med)"></div>
+                                    MEDIUM RISK
+                                </div>
+                                <div class="risk-bar-pct" id="pct-med">—%</div>
+                            </div>
+                            <div class="risk-track">
+                                <div class="risk-fill" id="bar-med" style="width:0%;background:var(--med)"></div>
+                            </div>
+                        </div>
+                        <div class="risk-bar-item">
+                            <div class="risk-bar-header">
+                                <div class="risk-bar-label">
+                                    <div class="risk-dot" style="background:var(--high)"></div>
+                                    HIGH RISK
+                                </div>
+                                <div class="risk-bar-pct" id="pct-high">—%</div>
+                            </div>
+                            <div class="risk-track">
+                                <div class="risk-fill" id="bar-high" style="width:0%;background:var(--high)"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="ai-flags" id="result-flags"></div>
-
-            <div class="ai-explanation">
-              <strong>AI ANALYSIS</strong>
-              <span id="result-explanation">—</span>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent AI Decisions</div>
+                        <div class="card-badge" id="decisions-count">0 RESULTS</div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>BET ID</th>
+                                <th>USER</th>
+                                <th>AMOUNT</th>
+                                <th>MATCH</th>
+                                <th>RISK</th>
+                                <th>VERDICT</th>
+                            </tr>
+                            </thead>
+                            <tbody id="recent-table">
+                            <tr><td colspan="6" class="empty-state">No data available</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div class="card" id="empty-verify" style="text-align:center;padding:60px">
-            <div style="font-size:32px;margin-bottom:12px">⬡</div>
-            <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px">
-              SELECT A USER AND RUN ANALYSIS
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- MATCHES PAGE -->
-    <div class="page" id="page-matches">
-      <div class="section-title">Match Registry</div>
-      <div id="matches-list">
-        <div class="empty-state">Loading matches...</div>
-      </div>
-    </div>
+        <div class="page" id="page-users">
+            <div class="section-title">User Registry</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>USERNAME</th>
+                        <th>BALANCE</th>
+                        <th>STATUS</th>
+                        <th>RISK SCORE</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                    </thead>
+                    <tbody id="users-table">
+                    <tr><td colspan="6" class="empty-state">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-  </div>
+        <div class="page" id="page-profile">
+            <button class="action-btn" onclick="showPage('users', document.querySelector('.nav-item:nth-child(4)'))" style="margin-bottom: 16px;">← BACK TO USERS</button>
+            <div class="profile-header" id="profile-header-content">
+                <div class="empty-state">Loading profile...</div>
+            </div>
+            <div class="section-title">User Bets History</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>MATCH</th>
+                        <th>AMOUNT</th>
+                        <th>OUTCOME</th>
+                        <th>AI RISK</th>
+                    </tr>
+                    </thead>
+                    <tbody id="profile-bets-table">
+                    <tr><td colspan="5" class="empty-state">Loading bets...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="page" id="page-bets">
+            <div class="filters">
+                <button class="filter-btn active" id="bet-filter-all" onclick="setBetRiskFilter('all', this)">ALL BETS</button>
+                <button class="filter-btn danger" id="bet-filter-high" onclick="setBetRiskFilter('high', this)">HIGH RISK ONLY</button>
+                <button class="filter-btn" id="bet-filter-med" onclick="setBetRiskFilter('med', this)">MEDIUM RISK</button>
+                <button class="filter-btn" id="bet-filter-low" onclick="setBetRiskFilter('low', this)">LOW RISK</button>
+
+                <span style="color:var(--muted); font-size: 10px; font-family: var(--mono); margin-left:10px;">|</span>
+
+                <input type="number" id="bet-min" placeholder="Min €" class="form-input" style="width: 100px; padding: 6px 10px;" oninput="applyBetFilters()">
+                <input type="number" id="bet-max" placeholder="Max €" class="form-input" style="width: 100px; padding: 6px 10px;" oninput="applyBetFilters()">
+
+                <select id="bet-sort" class="form-select" style="width: 180px; padding: 6px 10px;" onchange="applyBetFilters()">
+                    <option value="">Sort By...</option>
+                    <option value="user_asc">User (A-Z)</option>
+                    <option value="match_asc">Match (A-Z)</option>
+                    <option value="amount_asc">Amount (Low - High)</option>
+                    <option value="amount_desc">Amount (High - Low)</option>
+                </select>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>BET ID</th>
+                        <th>USER</th>
+                        <th>MATCH</th>
+                        <th>AMOUNT</th>
+                        <th>OUTCOME</th>
+                        <th>AI RISK</th>
+                    </tr>
+                    </thead>
+                    <tbody id="bets-table">
+                    <tr><td colspan="6" class="empty-state">Loading bets...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="page" id="page-verification">
+            <div class="verify-panel">
+                <div class="verify-form">
+                    <div class="card-title" style="margin-bottom:20px">RUN AI VERIFICATION</div>
+
+                    <div class="form-group">
+                        <label class="form-label">Search / Select User</label>
+                        <input type="text" id="verify-user-input" list="verify-users-list" class="form-input" placeholder="Type to search user...">
+                        <datalist id="verify-users-list"></datalist>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Analysis Mode</label>
+                        <select class="form-select" id="verify-mode">
+                            <option value="full">Full History Analysis</option>
+                            <option value="recent">Last 30 Days</option>
+                            <option value="suspicious">Suspicious Only</option>
+                        </select>
+                    </div>
+
+                    <button class="run-btn" onclick="runVerification()" id="run-btn">
+                        ▶ RUN AI ANALYSIS
+                    </button>
+                </div>
+
+                <div>
+                    <div class="loading-state" id="loading-state">
+                        <div class="spinner"></div>
+                        <div class="loading-text">AI ENGINE PROCESSING...</div>
+                    </div>
+
+                    <div class="ai-result" id="ai-result">
+                        <div class="ai-header">
+                            <span class="ai-icon">🤖</span>
+                            <span class="ai-title">AI VERDICT</span>
+                        </div>
+
+                        <div class="risk-level-display" id="result-risk">—</div>
+                        <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="result-reason">—</div>
+
+                        <div class="ai-flags" id="result-flags"></div>
+
+                        <div class="ai-explanation">
+                            <strong>AI ANALYSIS</strong>
+                            <span id="result-explanation">—</span>
+                        </div>
+                    </div>
+
+                    <div class="card" id="empty-verify" style="text-align:center;padding:60px">
+                        <div style="font-size:32px;margin-bottom:12px">⬡</div>
+                        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px">
+                            SEARCH A USER AND RUN ANALYSIS
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-matches">
+            <div class="filters">
+                <input type="text" id="match-search" class="form-input" placeholder="Search team..." style="width: 200px; padding: 6px 10px;" oninput="applyMatchFilters()">
+                <input type="date" id="match-date" class="form-input" style="width: 150px; padding: 6px 10px;" onchange="applyMatchFilters()">
+                <select id="match-sort" class="form-select" style="width: 150px; padding: 6px 10px;" onchange="applyMatchFilters()">
+                    <option value="desc">Date: Newest first</option>
+                    <option value="asc">Date: Oldest first</option>
+                </select>
+            </div>
+            <div class="section-title">Match Registry</div>
+            <div id="matches-list">
+                <div class="empty-state">Loading matches...</div>
+            </div>
+        </div>
+
+    </div>
 </div>
 
-<script>
-const API = '';
-
-// Clock
-function updateClock() {
-  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
-}
-setInterval(updateClock, 1000);
-updateClock();
-
-// Navigation
-function showPage(name, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  el.classList.add('active');
-  document.getElementById('pageLabel').textContent = el.textContent.trim();
-  loadPage(name);
-}
-
-function loadPage(name) {
-  if (name === 'dashboard') loadDashboard();
-  if (name === 'users') loadUsers();
-  if (name === 'bets') loadBets();
-  if (name === 'matches') loadMatches();
-  if (name === 'verification') loadVerificationUsers();
-}
-
-// Risk badge helper
-function riskBadge(level) {
-  if (!level) return '<span class="risk-badge">—</span>';
-  const l = level.toUpperCase();
-  const cls = l === 'HIGH' ? 'high' : l === 'MEDIUM' ? 'med' : 'low';
-  return `<span class="risk-badge ${cls}">${l}</span>`;
-}
-
-// DASHBOARD
-async function loadDashboard() {
-  try {
-    const [users, bets, results] = await Promise.all([
-      fetch(`${API}/api/users`).then(r => r.json()).catch(() => []),
-      fetch(`${API}/api/bets`).then(r => r.json()).catch(() => []),
-      fetch(`${API}/api/verification/results`).then(r => r.json()).catch(() => []),
-    ]);
-
-    document.getElementById('stat-users').textContent = users.length || 0;
-    document.getElementById('stat-bets').textContent = bets.length || 0;
-
-    const suspicious = results.filter(r => r.suspicious).length;
-    const blocked = users.filter(u => u.blocked).length;
-
-    document.getElementById('stat-suspicious').textContent = suspicious;
-    document.getElementById('stat-blocked').textContent = blocked;
-    document.getElementById('stat-users-change').textContent = `${users.length} registered`;
-    document.getElementById('stat-bets-change').textContent = `${bets.length} total`;
-    document.getElementById('stat-susp-change').textContent = suspicious > 0 ? `▲ ${suspicious} flagged` : 'None flagged';
-    document.getElementById('stat-blocked-change').textContent = blocked > 0 ? `▲ ${blocked} blocked` : 'None blocked';
-
-    // Risk distribution
-    const low = results.filter(r => r.riskLevel === 'LOW').length;
-    const med = results.filter(r => r.riskLevel === 'MEDIUM').length;
-    const high = results.filter(r => r.riskLevel === 'HIGH').length;
-    const total = results.length || 1;
-
-    const pLow = Math.round(low/total*100);
-    const pMed = Math.round(med/total*100);
-    const pHigh = Math.round(high/total*100);
-
-    document.getElementById('pct-low').textContent = pLow + '%';
-    document.getElementById('pct-med').textContent = pMed + '%';
-    document.getElementById('pct-high').textContent = pHigh + '%';
-    setTimeout(() => {
-      document.getElementById('bar-low').style.width = pLow + '%';
-      document.getElementById('bar-med').style.width = pMed + '%';
-      document.getElementById('bar-high').style.width = pHigh + '%';
-    }, 100);
-
-    // Recent table
-    document.getElementById('decisions-count').textContent = results.length + ' RESULTS';
-    const recent = results.slice(-10).reverse();
-    document.getElementById('recent-table').innerHTML = recent.length ? recent.map(r => `
-      <tr>
-        <td class="id-cell">#${r.id}</td>
-        <td>${r.bet?.user?.username || '—'}</td>
-        <td style="font-family:var(--mono);font-size:12px">${r.bet?.amount || 0}€</td>
-        <td style="font-size:12px">${r.bet?.match?.homeTeam?.name || '?'} vs ${r.bet?.match?.awayTeam?.name || '?'}</td>
-        <td>${riskBadge(r.riskLevel)}</td>
-        <td class="verdict-cell ${r.suspicious ? 'flagged' : ''}">${r.suspicious ? '⚑ suspicious' : 'clear'}</td>
-      </tr>
-    `).join('') : '<tr><td colspan="6" class="empty-state">No verification results yet</td></tr>';
-
-  } catch(e) {
-    console.error('Dashboard load error:', e);
-  }
-}
-
-// USERS
-async function loadUsers() {
-  try {
-    const users = await fetch(`${API}/api/users`).then(r => r.json()).catch(() => []);
-    document.getElementById('users-table').innerHTML = users.length ? users.map(u => `
-      <tr class="user-row">
-        <td class="id-cell">#${u.id}</td>
-        <td style="font-family:var(--mono);font-size:12px">${u.username}</td>
-        <td style="font-family:var(--mono);font-size:12px">${u.balance?.toFixed(2) || '0.00'}€</td>
-        <td><span class="status-badge ${u.blocked ? 'blocked' : 'active'}">${u.blocked ? 'BLOCKED' : 'ACTIVE'}</span></td>
-        <td>${riskBadge(u.riskLevel || 'LOW')}</td>
-        <td style="display:flex;gap:8px">
-          <button class="action-btn" onclick="verifyUserNav(${u.id})">VERIFY</button>
-          <button class="action-btn" onclick="alert('User #${u.id} profile')">PROFILE</button>
-        </td>
-      </tr>
-    `).join('') : '<tr><td colspan="6" class="empty-state">No users found</td></tr>';
-  } catch(e) {}
-}
-
-// BETS
-let allBets = [];
-async function loadBets() {
-  try {
-    allBets = await fetch(`${API}/api/bets`).then(r => r.json()).catch(() => []);
-    renderBets(allBets);
-  } catch(e) {}
-}
-
-function renderBets(bets) {
-  document.getElementById('bets-table').innerHTML = bets.length ? bets.map(b => `
-    <tr>
-      <td class="id-cell">#${b.id}</td>
-      <td style="font-size:12px">${b.user?.username || '—'}</td>
-      <td style="font-size:12px">${b.match?.homeTeam?.name || '?'} vs ${b.match?.awayTeam?.name || '?'}</td>
-      <td style="font-family:var(--mono);font-size:12px">${b.amount}€</td>
-      <td style="font-size:12px">${b.outcome || '—'}</td>
-      <td>${riskBadge(b.riskLevel || 'LOW')}</td>
-    </tr>
-  `).join('') : '<tr><td colspan="6" class="empty-state">No bets found</td></tr>';
-}
-
-function filterBets(level, el) {
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  if (level === 'all') { renderBets(allBets); return; }
-  const map = { high: 'HIGH', med: 'MEDIUM', low: 'LOW' };
-  renderBets(allBets.filter(b => (b.riskLevel || 'LOW').toUpperCase() === map[level]));
-}
-
-// MATCHES
-async function loadMatches() {
-  try {
-    const matches = await fetch(`${API}/api/matches`).then(r => r.json()).catch(() => []);
-    document.getElementById('matches-list').innerHTML = matches.length ? matches.map(m => `
-      <div class="match-card">
-        <div class="match-teams">
-          <span>${m.homeTeam?.name || '?'}</span>
-          <span class="match-vs">VS</span>
-          <span>${m.awayTeam?.name || '?'}</span>
-        </div>
-        <div class="match-meta">
-          <span class="match-time">${m.startTime ? new Date(m.startTime).toLocaleString('en-GB') : '—'}</span>
-          <span class="match-status ${(m.status || '').toLowerCase()}">${m.status || 'UNKNOWN'}</span>
-          <button class="verify-btn" onclick="alert('Verify all bets for match #${m.id}')">VERIFY ALL BETS</button>
-        </div>
-      </div>
-    `).join('') : '<div class="empty-state">No matches found</div>';
-  } catch(e) {}
-}
-
-// VERIFICATION
-async function loadVerificationUsers() {
-  try {
-    const users = await fetch(`${API}/api/users`).then(r => r.json()).catch(() => []);
-    const sel = document.getElementById('verify-user');
-    sel.innerHTML = '<option value="">— Select user —</option>' +
-      users.map(u => `<option value="${u.id}">${u.username} (#${u.id})</option>`).join('');
-  } catch(e) {}
-}
-
-async function runVerification() {
-  const userId = document.getElementById('verify-user').value;
-  if (!userId) { alert('Please select a user'); return; }
-
-  document.getElementById('empty-verify').style.display = 'none';
-  document.getElementById('ai-result').classList.remove('visible');
-  document.getElementById('loading-state').classList.add('visible');
-  document.getElementById('run-btn').disabled = true;
-
-  try {
-    const res = await fetch(`${API}/api/verification/user/${userId}`);
-    const data = await res.json();
-
-    document.getElementById('loading-state').classList.remove('visible');
-
-    const risk = (data.riskLevel || 'LOW').toUpperCase();
-    const riskClass = risk === 'HIGH' ? 'high' : risk === 'MEDIUM' ? 'med' : 'low';
-
-    const resultEl = document.getElementById('ai-result');
-    resultEl.className = 'ai-result visible ' + riskClass + '-risk';
-
-    document.getElementById('result-risk').className = 'risk-level-display ' + riskClass;
-    document.getElementById('result-risk').textContent = risk + ' RISK';
-    document.getElementById('result-reason').textContent = data.reason || '—';
-    document.getElementById('result-explanation').textContent = data.explanation || '—';
-
-    const flags = [
-      { label: 'SUSPICIOUS', active: data.suspicious },
-      { label: 'GAMBLING ADDICTION', active: data.gamblingAddictionRisk },
-      { label: 'MATCH FIXING', active: data.matchFixingRisk },
-    ];
-
-    document.getElementById('result-flags').innerHTML = flags.map(f =>
-      `<span class="flag-chip ${f.active ? 'active' : 'inactive'}">${f.active ? '⚑' : '✓'} ${f.label}</span>`
-    ).join('');
-
-  } catch(e) {
-    document.getElementById('loading-state').classList.remove('visible');
-    document.getElementById('empty-verify').style.display = 'block';
-    document.getElementById('empty-verify').innerHTML = `
-      <div style="font-family:var(--mono);font-size:11px;color:var(--high);letter-spacing:2px">
-        ✕ VERIFICATION FAILED
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">${e.message}</div>
-    `;
-  } finally {
-    document.getElementById('run-btn').disabled = false;
-  }
-}
-
-function verifyUserNav(userId) {
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const verifyNav = document.querySelector('[onclick="showPage(\'verification\', this)"]');
-  if (verifyNav) verifyNav.classList.add('active');
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-verification').classList.add('active');
-  document.getElementById('pageLabel').textContent = 'Verification';
-  loadVerificationUsers().then(() => {
-    document.getElementById('verify-user').value = userId;
-  });
-}
-
-// Initial load
-loadDashboard();
-</script>
+<script src="script.js"></script>
 </body>
 </html>
