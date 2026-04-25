@@ -26,6 +26,7 @@ function showPage(name, el) {
 function riskBadge(level) {
     if (!level) return '<span class="risk-badge">—</span>';
     const l = level.toUpperCase();
+    if (l === 'NOT VERIFIED') return '<span class="risk-badge" style="color:var(--muted);border:1px solid var(--border)">NOT VERIFIED</span>';
     const cls = l === 'HIGH' ? 'high' : l === 'MEDIUM' ? 'med' : 'low';
     return `<span class="risk-badge ${cls}">${l}</span>`;
 }
@@ -100,24 +101,144 @@ async function loadDashboard() {
     } catch(e) { console.error('Dashboard load error:', e); }
 }
 
+async function runAllVerifications() {
+    const btn = document.getElementById('run-all-btn');
+    btn.disabled = true;
+    btn.textContent = 'ANALYZING...';
+
+    try {
+        const res = await fetch(`${API}/api/verification/run-all`, { method: 'POST' });
+        if (!res.ok) throw new Error('Failed');
+        const data = await res.json();
+
+        btn.textContent = `✓ DONE: ${data.success} analyzed, ${data.skipped} skipped, ${data.failed} failed`;
+        btn.style.background = 'var(--low)';
+
+        // обновляем дашборд
+        setTimeout(() => {
+            loadDashboard();
+            btn.textContent = '▶ VERIFY ALL USERS';
+            btn.style.background = '';
+            btn.disabled = false;
+        }, 3000);
+
+    } catch(e) {
+        btn.textContent = '✕ ERROR';
+        btn.style.background = 'var(--high)';
+        setTimeout(() => {
+            btn.textContent = '▶ VERIFY ALL USERS';
+            btn.style.background = '';
+            btn.disabled = false;
+        }, 3000);
+    }
+}
+
 // USERS & PROFILE
+let allUsersData = []; // Глобальная переменная для хранения всех юзеров
+
 async function loadUsers() {
     try {
-        const users = await fetch(`${API}/api/users`).then(r => r.json()).catch(() => []);
-        document.getElementById('users-table').innerHTML = users.length ? users.map(u => `
-      <tr class="user-row">
-        <td class="id-cell">#${u.id}</td>
-        <td style="font-family:var(--mono);font-size:12px">${u.username}</td>
-        <td style="font-family:var(--mono);font-size:12px">${u.balance?.toFixed(2) || '0.00'}€</td>
-        <td><span class="status-badge ${u.blocked ? 'blocked' : 'active'}">${u.blocked ? 'BLOCKED' : 'ACTIVE'}</span></td>
-        <td>${riskBadge(u.riskLevel || 'LOW')}</td>
-        <td style="display:flex;gap:8px">
-          <button class="action-btn" onclick="verifyUserNav(${u.id})">VERIFY</button>
-          <button class="action-btn" onclick="openProfile(${u.id})">PROFILE</button>
-        </td>
-      </tr>
-    `).join('') : '<tr><td colspan="6" class="empty-state">No users found</td></tr>';
-    } catch(e) {}
+        const response = await fetch(`${API}/api/users`);
+        allUsersData = await response.json(); // Сохраняем данные
+        renderUsersList(allUsersData); // Рендерим начальный список
+    } catch(e) {
+        console.error("Error loading users:", e);
+        document.getElementById('users-table').innerHTML = '<tr><td colspan="6" class="empty-state" style="color:var(--high)">Failed to load users</td></tr>';
+    }
+}
+
+// Функция для фильтрации
+function filterUsers() {
+    const searchTerm = document.getElementById('user-search').value.toLowerCase();
+
+    const filtered = allUsersData.filter(u =>
+        u.username.toLowerCase().includes(searchTerm)
+    );
+
+    renderUsersList(filtered);
+}
+
+// Выносим отрисовку в отдельную функцию
+function renderUsersList(users) {
+    document.getElementById('users-table').innerHTML = users.length ? users.map(u => `
+    <tr class="user-row">
+      <td class="id-cell">#${u.id}</td>
+      <td style="font-family:var(--mono);font-size:12px">${u.username}</td>
+      <td style="font-family:var(--mono);font-size:12px">${u.balance?.toFixed(2) || '0.00'}€</td>
+      <td><span class="status-badge ${u.blocked ? 'blocked' : 'active'}">${u.blocked ? 'BLOCKED' : 'ACTIVE'}</span></td>
+      <td>${riskBadge(u.riskLevel || 'LOW')}</td>
+      <td style="display:flex;gap:8px">
+        <button class="action-btn" onclick="verifyUserNav(${u.id})">VERIFY</button>
+        <button class="action-btn" onclick="openProfile(${u.id})">PROFILE</button>
+      </td>
+    </tr>
+  `).join('') : '<tr><td colspan="6" class="empty-state">No users matching your search</td></tr>';
+}
+
+// Функция для загрузки CSV
+async function uploadCsv(type) {
+    const fileInput = document.getElementById(`csv-${type}-input`);
+    const btn = document.getElementById(`btn-upload-${type}`);
+    const statusDiv = document.getElementById('import-status');
+    const statusText = document.getElementById('import-status-text');
+
+    if (!fileInput.files[0]) {
+        alert("Please select a CSV file first.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    btn.disabled = true;
+    btn.textContent = "UPLOADING...";
+    statusDiv.style.display = "block";
+    statusText.textContent = `Processing ${type} batch import...`;
+
+    // Определяем эндпоинт в зависимости от типа
+    const endpoint = type === 'users' ? `${API}/api/users/upload` : `${API}/api/bets/upload-bets`;
+
+    try {
+        const res = await fetch(endpoint, { method: "POST", body: formData });
+        const data = await res.json();
+
+        if (res.ok) {
+            statusText.style.color = "var(--low)";
+            statusText.textContent = `Success! ${data.count} ${type} imported.`;
+            if (type === 'users') loadUsers();
+            if (type === 'bets') {
+                loadBets();
+                loadDashboard(); // Обновляем стату на дашборде
+            }
+        } else {
+            throw new Error(data.error || "Upload failed");
+        }
+    } catch (e) {
+        statusText.style.color = "var(--high)";
+        statusText.textContent = "Error: " + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = `↑ UPLOAD ${type.toUpperCase()}`;
+    }
+}
+
+// Функция для очистки БД
+async function clearDatabase() {
+    if (!confirm("ARE YOU SURE? This will delete ALL users, bets, and AI results!")) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/api/database/clear`, { method: "DELETE" });
+        if (res.ok) {
+            alert("Database cleared successfully.");
+            location.reload(); // Перезагружаем дашборд
+        } else {
+            alert("Failed to clear database.");
+        }
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
 }
 
 async function openProfile(userId) {
@@ -131,29 +252,27 @@ async function openProfile(userId) {
 
         if(!u) throw new Error("User not found");
 
+// Обновляем заголовок профиля (оставляем как было)
         document.getElementById('profile-header-content').innerHTML = `
-      <div class="profile-info">
-        <h2>${u.username} <span class="id-cell" style="font-size:14px; margin-left:8px">#${u.id}</span></h2>
-        <div style="font-size:12px; color:var(--muted); font-family:var(--mono);">
-           Balance: <span style="color:var(--text)">${u.balance?.toFixed(2) || '0.00'}€</span> &nbsp;|&nbsp; 
-           Status: <span class="status-badge ${u.blocked ? 'blocked' : 'active'}">${u.blocked ? 'BLOCKED' : 'ACTIVE'}</span>
-        </div>
-      </div>
-      <div>${riskBadge(u.riskLevel || 'LOW')}</div>
+    <div class="profile-info">
+    <h2>${u.username} <span class="id-cell" style="font-size:14px; margin-left:8px">#${u.id}</span></h2>
     `;
 
+// ФЕТЧ СТАВОК И ИСПРАВЛЕННАЯ ФИЛЬТРАЦИЯ
         const allB = await fetch(`${API}/api/bets`).then(r => r.json());
-        const userBets = allB.filter(b => b.user?.id === userId);
+
+// ИСПРАВЛЕНИЕ ТУТ: Фильтруем по полю username, так как в JSON именно оно
+        const userBets = allB.filter(b => b.username === u.username);
 
         document.getElementById('profile-bets-table').innerHTML = userBets.length ? userBets.map(b => `
-      <tr>
-        <td class="id-cell">#${b.id}</td>
-        <td style="font-size:12px">${b.match?.homeTeam?.name || '?'} vs ${b.match?.awayTeam?.name || '?'}</td>
-        <td style="font-family:var(--mono);font-size:12px">${b.amount}€</td>
-        <td style="font-size:12px">${b.outcome || '—'}</td>
-        <td>${riskBadge(b.riskLevel || 'LOW')}</td>
-      </tr>
-    `).join('') : '<tr><td colspan="5" class="empty-state">No bets history</td></tr>';
+    <tr>
+    <td class="id-cell">#${b.id}</td>
+    <td style="font-size:12px">${b.homeTeam || '?'} vs ${b.awayTeam || '?'}</td>
+    <td style="font-family:var(--mono);font-size:12px">${b.amount}€</td>
+    <td style="font-size:12px">${b.outcome || '—'}</td>
+    <td>${riskBadge(b.riskLevel || 'LOW')}</td>
+    </tr>
+`).join('') : '<tr><td colspan="5" class="empty-state">No bets history</td></tr>';
 
     } catch(e) {
         document.getElementById('profile-header-content').innerHTML = `<div class="empty-state" style="color:var(--high)">Error loading profile</div>`;
@@ -211,13 +330,13 @@ function renderBets(bets) {
     document.getElementById('bets-table').innerHTML = bets.length ? bets.map(b => `
     <tr>
       <td class="id-cell">#${b.id}</td>
-      <td style="font-size:12px">${b.user?.username || '—'}</td>
-      <td style="font-size:12px">${b.match?.homeTeam?.name || '?'} vs ${b.match?.awayTeam?.name || '?'}</td>
+      <td style="font-size:12px">${b.username || '—'}</td>
+      <td style="font-size:12px">${b.homeTeam || '?'} vs ${b.awayTeam || '?'}</td>
       <td style="font-family:var(--mono);font-size:12px">${b.amount}€</td>
       <td style="font-size:12px">${b.outcome || '—'}</td>
-      <td>${riskBadge(b.riskLevel || 'LOW')}</td>
+      <td>${riskBadge(b.riskLevel)}</td>
     </tr>
-  `).join('') : '<tr><td colspan="6" class="empty-state">No matching bets</td></tr>';
+  `).join('') : '<tr><td colspan="6" class="empty-state">No bets found</td></tr>';
 }
 
 // MATCHES WITH SEARCH & AI PREDICTION
@@ -257,7 +376,11 @@ function applyMatchFilters() {
 }
 
 function renderMatches(matches) {
-    document.getElementById('matches-list').innerHTML = matches.length ? matches.map(m => `
+    document.getElementById('matches-list').innerHTML = matches.length ? matches.map(m => {
+        // Проверяем статус (приводим к верхнему регистру для надежности)
+        const isFinished = (m.status || '').toUpperCase() === 'FINISHED';
+
+        return `
     <div class="match-card-wrap">
       <div class="match-card">
         <div class="match-teams">
@@ -268,12 +391,14 @@ function renderMatches(matches) {
         <div class="match-meta">
           <span class="match-time">${m.startTime ? new Date(m.startTime).toLocaleString('en-GB') : '—'}</span>
           <span class="match-status ${(m.status || '').toLowerCase()}">${m.status || 'UNKNOWN'}</span>
-          <button class="verify-btn" onclick="predictMatch(${m.id}, this)" style="border-color:var(--accent); color:var(--accent)">🤖 AI ANALYSIS</button>
+          
+          ${!isFinished ? `<button class="verify-btn" onclick="predictMatch(${m.id}, this)" style="border-color:var(--accent); color:var(--accent)">🤖 AI ANALYSIS</button>` : ''}
+          
         </div>
       </div>
       <div class="prediction-box" id="pred-box-${m.id}"></div>
     </div>
-  `).join('') : '<div class="empty-state">No matches found</div>';
+  `}).join('') : '<div class="empty-state">No matches found</div>';
 }
 
 async function predictMatch(matchId, btn) {
@@ -298,7 +423,10 @@ async function predictMatch(matchId, btn) {
         const explanationText = data.aiExplanation || 'No explanation provided.';
 
         box.innerHTML = `
-            <div style="font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:2px; margin-bottom:10px;">AI PREDICTION RESULT</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:2px;">AI PREDICTION RESULT</div>
+                <button class="verify-btn" onclick="regeneratePrediction(${matchId}, this)" style="font-size:9px; padding:4px 10px; color:var(--muted);">↺ REGENERATE</button>
+            </div>
             <div class="pred-stats">
                <div class="pred-stat-item">Home Win: <span>${homeWinValue}%</span></div>
                <div class="pred-stat-item">Draw: <span>${drawValue}%</span></div>
@@ -399,3 +527,40 @@ function verifyUserNav(userId) {
 
 // Initial load
 loadDashboard();
+async function regeneratePrediction(matchId, btn) {
+    const box = document.getElementById('pred-box-' + matchId);
+    const originalText = btn.textContent;
+    btn.textContent = 'REGENERATING...';
+    btn.style.opacity = '0.5';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch(API + '/api/predictions/' + matchId + '/regenerate', { method: 'POST' });
+        if (!res.ok) throw new Error('API Error');
+        const data = await res.json();
+
+        const homeWinValue = data.homeWinProb !== undefined ? data.homeWinProb : '???';
+        const drawValue = data.drawProb !== undefined ? data.drawProb : '???';
+        const awayWinValue = data.awayWinProb !== undefined ? data.awayWinProb : '???';
+        const explanationText = data.aiExplanation || 'No explanation provided.';
+
+        box.innerHTML =
+            '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">' +
+                '<div style="font-family:var(--mono); font-size:10px; color:var(--accent); letter-spacing:2px;">AI PREDICTION RESULT (UPDATED)</div>' +
+                '<button class="verify-btn" onclick="regeneratePrediction(' + matchId + ', this)" style="font-size:9px; padding:4px 10px; color:var(--muted);">↺ REGENERATE</button>' +
+            '</div>' +
+            '<div class="pred-stats">' +
+               '<div class="pred-stat-item">Home Win: <span>' + homeWinValue + '%</span></div>' +
+               '<div class="pred-stat-item">Draw: <span>' + drawValue + '%</span></div>' +
+               '<div class="pred-stat-item">Away Win: <span>' + awayWinValue + '%</span></div>' +
+            '</div>' +
+            '<div style="color:var(--muted); line-height:1.5;"><strong>Explanation:</strong> ' + explanationText + '</div>';
+
+    } catch(e) {
+        box.innerHTML += '<div style="color:var(--high); font-size:11px; margin-top:8px;">✕ Regeneration failed</div>';
+    } finally {
+        btn.textContent = originalText;
+        btn.style.opacity = '1';
+        btn.disabled = false;
+    }
+}

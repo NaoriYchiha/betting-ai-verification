@@ -33,6 +33,10 @@
         <a class="nav-item" onclick="showPage('matches', this)">
             <span class="nav-icon">◉</span> Matches
         </a>
+        <div class="nav-section">System</div>
+        <a class="nav-item" onclick="showPage('database', this)">
+            <span class="nav-icon">⚙</span> Database
+        </a>
     </nav>
     <div class="sidebar-footer">
         <span class="status-dot"></span>AI ENGINE ONLINE
@@ -43,6 +47,10 @@
     <div class="topbar">
         <div class="page-title">BetGuard / <span id="pageLabel">Dashboard</span></div>
         <div class="topbar-right">
+            <button class="run-btn" id="run-all-btn" onclick="runAllVerifications()"
+                    style="width:auto; padding:8px 16px; font-size:10px; margin:0;">
+                ▶ VERIFY ALL USERS
+            </button>
             <div class="time-badge" id="clock">--:--:--</div>
         </div>
     </div>
@@ -146,6 +154,9 @@
         </div>
 
         <div class="page" id="page-users">
+            <div class="filters">
+                <input type="text" id="user-search" class="form-input" placeholder="Search by username..." style="width: 250px; padding: 6px 10px;" oninput="filterUsers()">
+            </div>
             <div class="section-title">User Registry</div>
             <div class="table-wrap">
                 <table>
@@ -302,6 +313,63 @@
             </div>
         </div>
 
+        <div class="page" id="page-database">
+            <div class="section-title">Database Management</div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Bulk Import Users</div>
+                        <div class="card-badge">CSV</div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <p style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">
+                            Format: <code>username,balance</code>
+                        </p>
+                        <div class="form-group">
+                            <input type="file" id="csv-users-input" accept=".csv" class="form-input" style="padding: 8px;">
+                        </div>
+                        <button class="run-btn" onclick="uploadCsv('users')" id="btn-upload-users">↑ UPLOAD USERS</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Bulk Import Bets</div>
+                        <div class="card-badge">CSV</div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <p style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">
+                            Format: <code>username,match_id,amount,outcome,risk,suspicious</code>
+                        </p>
+                        <div class="form-group">
+                            <input type="file" id="csv-bets-input" accept=".csv" class="form-input" style="padding: 8px;">
+                        </div>
+                        <button class="run-btn" onclick="uploadCsv('bets')" id="btn-upload-bets">↑ UPLOAD BETS</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="border-color: rgba(255, 61, 61, 0.3); margin-top: 24px;">
+                <div class="card-header">
+                    <div class="card-title" style="color: var(--high);">DANGER ZONE</div>
+                    <div class="card-badge" style="background: var(--high-bg); color: var(--high); border-color: rgba(255,61,61,0.2);">SYSTEM</div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5;">
+                        Warning: This action is irreversible. It will permanently delete <strong>ALL</strong> users, bets, matches, and AI predictions from the database.
+                    </p>
+
+                    <button class="run-btn" onclick="clearDatabase()" style="background: var(--high); color: #fff; border: none; max-width: 250px;">
+                        ⚠ CLEAR ALL DATA
+                    </button>
+                </div>
+            </div>
+
+            <div id="import-status" style="margin-top: 20px; display: none;" class="ai-explanation">
+                <strong id="import-status-title">IMPORT STATUS</strong>
+                <span id="import-status-text"></span>
+            </div>
+        </div>
     </div>
 </div>
 
