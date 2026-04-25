@@ -1,5 +1,6 @@
 package org.lytvynovych.bettingaiverification.service;
 
+
 import org.lytvynovych.bettingaiverification.client.FootballApiClient;
 import org.lytvynovych.bettingaiverification.dto.external.MatchItemDto;
 import org.lytvynovych.bettingaiverification.dto.external.TeamDto;
@@ -8,6 +9,7 @@ import org.lytvynovych.bettingaiverification.entity.Team;
 import org.lytvynovych.bettingaiverification.repository.MatchRepository;
 import org.lytvynovych.bettingaiverification.repository.TeamRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -28,6 +30,7 @@ public class ExternalFootballService {
         this.footballApiClient = footballApiClient;
     }
 
+    @Transactional
     public void syncMatches() {
 
         List<MatchItemDto> apiMatches = footballApiClient.getTodayMatches();

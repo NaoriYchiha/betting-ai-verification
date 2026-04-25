@@ -34,9 +34,13 @@ public class PredictionService {
     }
 
     public Prediction getByMatchId(Long matchId) {
-        return predictionRepository.findByMatchId(matchId)
-                .stream()
-                .findFirst()
+        return predictionRepository.findFirstByMatchIdOrderByCreatedAtDesc(matchId)
                 .orElse(null);
+    }
+
+    public String deletePredictionByMatchId(Long matchId) {
+        Prediction prediction = getByMatchId(matchId);
+        predictionRepository.delete(prediction);
+        return "Successfully deleted prediction";
     }
 }

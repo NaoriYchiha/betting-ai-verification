@@ -16,7 +16,7 @@ public class MatchService {
     }
 
     public List<Match> getTopMatches() {
-        return matchRepository.findTop20ByOrderByStartTimeAsc();
+        return matchRepository.findTop20ByOrderByStartTimeDesc();
     }
 
     public Match getById(Long id) {
