@@ -25,10 +25,29 @@ public class PredictionController {
         this.predictionService = predictionService;
     }
 
+    @PostMapping("/{matchId}/regenerate")
+    public Prediction regeneratePrediction(@PathVariable Long matchId) {
+        Match match = matchService.getById(matchId);
+        AiResponse response = aiPredictionService.generatePrediction(match);
+        predictionService.deletePredictionByMatchId(matchId);
+        return predictionService.savePrediction(
+                match,
+                response.getHomeWin(),
+                response.getDraw(),
+                response.getAwayWin(),
+                response.getExplanation()
+        );
+    }
+
     @PostMapping("/{matchId}")
     public Prediction generatePrediction(@PathVariable Long matchId) {
-
         Match match = matchService.getById(matchId);
+
+        // если уже есть — возвращаем существующий без вызова AI
+        Prediction existing = predictionService.getByMatchId(matchId);
+        if (existing != null) {
+            return existing;
+        }
 
         AiResponse response = aiPredictionService.generatePrediction(match);
 
