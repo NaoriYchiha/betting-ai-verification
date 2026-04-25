@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface VerificationResultRepository extends JpaRepository<VerificationResult, Long> {
-    List<VerificationResult> findByBetUserId(Long userId);
 
     @Query("SELECT vr FROM VerificationResult vr WHERE vr.bet.user.id = :userId ORDER BY vr.createdAt DESC LIMIT 1")
     Optional<VerificationResult> findLatestByUserId(@Param("userId") Long userId);

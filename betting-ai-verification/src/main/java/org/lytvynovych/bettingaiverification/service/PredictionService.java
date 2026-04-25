@@ -38,9 +38,8 @@ public class PredictionService {
                 .orElse(null);
     }
 
-    public String deletePredictionByMatchId(Long matchId) {
+    public void deletePredictionByMatchId(Long matchId) {
         Prediction prediction = getByMatchId(matchId);
         predictionRepository.delete(prediction);
-        return "Successfully deleted prediction";
     }
 }

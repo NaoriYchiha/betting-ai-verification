@@ -24,7 +24,4 @@ public class MatchService {
                 .orElseThrow(() -> new RuntimeException("Match not found"));
     }
 
-    public Match save(Match match) {
-        return matchRepository.save(match);
-    }
 }
