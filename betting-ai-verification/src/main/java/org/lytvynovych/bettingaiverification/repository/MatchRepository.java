@@ -15,6 +15,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
 
     List<Match> findTop20ByOrderByStartTimeDesc();
 
+
     @Modifying
     @Query("UPDATE Match m SET m.status = 'FINISHED' WHERE m.status <> 'FINISHED' AND m.startTime <= :threshold")
     int finishStaleMatches(@Param("threshold") LocalDateTime threshold);

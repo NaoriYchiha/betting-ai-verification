@@ -161,6 +161,11 @@ select.form-select { appearance: none; }
 .match-status.finished { background: var(--surface2); color: var(--muted); }
 .verify-btn { padding: 6px 14px; background: transparent; border: 1px solid var(--border2); border-radius: 5px; color: var(--muted); font-family: var(--mono); font-size: 10px; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; }
 .verify-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,255,0.05); }
+.filter-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
 /* PREDICTION BOX */
 .prediction-box { display: none; padding: 16px 20px; background: var(--surface2); border-top: 1px solid var(--border); font-size: 13px; color: var(--text); }

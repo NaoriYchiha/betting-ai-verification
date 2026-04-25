@@ -18,7 +18,7 @@ function showPage(name, el) {
     if (name === 'dashboard') loadDashboard();
     if (name === 'users') loadUsers();
     if (name === 'bets') loadBets();
-    if (name === 'matches') loadMatches();
+    if (name === 'matches') loadMatches(0);
     if (name === 'verification') loadVerificationUsers();
 }
 
@@ -342,11 +342,51 @@ function renderBets(bets) {
 // MATCHES WITH SEARCH & AI PREDICTION
 let allMatchesData = [];
 
-async function loadMatches() {
+let matchPage = 0;
+const matchPageSize = 20;
+let matchTotalPages = 1;
+
+async function loadMatches(page = 0) {
+    matchPage = page;
     try {
-        allMatchesData = await fetch(`${API}/api/matches`).then(r => r.json()).catch(() => []);
+        const res = await fetch(`${API}/api/matches?page=${page}&size=${matchPageSize}`);
+        const data = await res.json();
+        matchTotalPages = data.page.totalPages;
+        allMatchesData = data.content;
         applyMatchFilters();
-    } catch(e) {}
+        renderMatchPagination();
+    } catch(e) {
+        document.getElementById('matches-list').innerHTML = '<div class="empty-state">Error loading matches</div>';
+    }
+}
+
+function renderMatchPagination() {
+    const existing = document.getElementById('match-pagination');
+    if (existing) existing.remove();
+
+    const div = document.createElement('div');
+    div.id = 'match-pagination';
+    div.style.cssText = 'display:flex; gap:8px; margin-top:16px; align-items:center; font-family:var(--mono); font-size:11px;';
+
+    div.innerHTML = `
+        <button class="filter-btn ${matchPage === 0 ? 'disabled' : ''}" 
+            onclick="loadMatches(${matchPage - 1})" 
+            ${matchPage === 0 ? 'disabled' : ''}>← PREV</button>
+        
+        <span style="color:var(--muted); padding: 0 8px;">
+            PAGE ${matchPage + 1} / ${matchTotalPages}
+        </span>
+        
+        <button class="filter-btn ${matchPage >= matchTotalPages - 1 ? 'disabled' : ''}" 
+            onclick="loadMatches(${matchPage + 1})"
+            ${matchPage >= matchTotalPages - 1 ? 'disabled' : ''}>NEXT →</button>
+        
+        <span style="color:var(--muted); margin-left:8px;">
+            (${matchTotalPages * matchPageSize} total matches)
+        </span>
+    `;
+
+    document.getElementById('matches-list').after(div);
 }
 
 function applyMatchFilters() {
