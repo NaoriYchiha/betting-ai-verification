@@ -116,7 +116,7 @@ This starts three containers:
 | `redis_cache` | 6379 | Redis cache |
 | `app_backend` | 8080 | Spring Boot application |
 
-App will be available at `http://localhost:8080`.
+App will be available at `http://localhost:8080/dashboard.html`.
 
 ### Import bets
 
